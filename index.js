@@ -44,6 +44,7 @@ Startdeliver.prototype.doRequest = function (opts) {
 		url: this.settings.apiUrl + opts.endpoint,
 		data: opts.body || null,
 		timeout: 120 * 1000,
+		withCredentials: true,
 		headers: {},
 	};
 
