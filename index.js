@@ -9,6 +9,8 @@ const Startdeliver = function (settings) {
 		};
 	}
 
+	this.settings.headers = {};
+
 	if (this.settings.account) {
 		this.settings.apiKey = this.settings.account.apiKey;
 	}
@@ -29,6 +31,10 @@ Startdeliver.prototype.setApiKey = function(apiKey) {
 	this.settings.apiKey = apiKey;
 };
 
+Startdeliver.prototype.setDefaultHeader = function(header, str) {
+	this.settings.headers[header] = str;
+};
+
 Startdeliver.prototype.setToken = this.setApiKey;
 
 Startdeliver.prototype.doRequest = function (opts) {
@@ -45,7 +51,7 @@ Startdeliver.prototype.doRequest = function (opts) {
 		data: opts.body || null,
 		timeout: 120 * 1000,
 		withCredentials: true,
-		headers: {},
+		headers: JSON.parse(JSON.stringify(this.settings.headers)),
 	};
 
 	if (self.settings.apiKey) {
@@ -55,7 +61,6 @@ Startdeliver.prototype.doRequest = function (opts) {
 	this.debug('config', config);
 
 	return new Promise((resolve, reject) => {
-		console.log(config);
 		axios(config)
 			.then((res) => {
 				this.debug('res', res);
@@ -63,7 +68,6 @@ Startdeliver.prototype.doRequest = function (opts) {
 
 			})
 			.catch((err) => {
-				console.log(err);
 				this.debug('err', err);
 				err = { statusCode: err.response.status, data: err.response.data };
 				return cb ? cb(err) : reject(err);
@@ -167,7 +171,23 @@ Startdeliver.prototype.save = function (entity, params) {
 	const opts = {
 		cb: cb,
 		endpoint: entity + (id ? ('/' + id) : ''),
-		method: id ? 'put' : 'post',
+		method: id ? 'patch' : 'post',
+		body: params
+	};
+
+	return self.doRequest(opts);
+
+};
+
+Startdeliver.prototype.replace = function (entity, params) {
+	const self = this;
+	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
+	const id = params.id;
+
+	const opts = {
+		cb: cb,
+		endpoint: entity + '/' + id,
+		method: 'put',
 		body: params
 	};
 
@@ -240,7 +260,8 @@ Startdeliver.prototype.find = Startdeliver.prototype.get;
 Startdeliver.prototype.create = Startdeliver.prototype.save;
 Startdeliver.prototype.update = Startdeliver.prototype.save;
 Startdeliver.prototype.post = Startdeliver.prototype.save;
-Startdeliver.prototype.put = Startdeliver.prototype.save;
+Startdeliver.prototype.patch = Startdeliver.prototype.save;
+Startdeliver.prototype.put = Startdeliver.prototype.replace;
 Startdeliver.prototype.remove = Startdeliver.prototype.delete;
 
 module.exports = Startdeliver;
