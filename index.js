@@ -23,7 +23,7 @@ const Startdeliver = function (settings) {
 	if (this.settings.apiUrl.slice(-1) !== '/') {
 		this.settings.apiUrl = this.settings.apiUrl + '/';
 	}
-
+	this.settings.apiUrl += 'api/';
 	this.settings.apiUrl += (this.settings.version + '/');
 };
 
@@ -57,6 +57,8 @@ Startdeliver.prototype.doRequest = function (opts) {
 	if (self.settings.apiKey) {
 		config.headers.Authorization = self.settings.apiKey;
 	}
+
+	config.headers['User-Agent'] = config.headers['User-Agent'] || 'Startdeliver-JS';
 
 	this.debug('config', config);
 
@@ -155,6 +157,14 @@ Startdeliver.prototype.get = function (entity, params) {
 			if (params.filter.sort) {
 				params.sort = params.filter.sort;
 				delete params.filter.sort;
+			}
+			if (params.filter.report) {
+				params.report = params.filter.report;
+				delete params.filter.report;
+			}
+			if (params.filter.expand) {
+				params.expand = params.filter.expand;
+				delete params.filter.expand;
 			}
 		}
 		opts.endpoint += '?query=' + encodeURIComponent(JSON.stringify(params));
