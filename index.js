@@ -58,7 +58,9 @@ Startdeliver.prototype.doRequest = function (opts) {
 		config.headers.Authorization = self.settings.apiKey;
 	}
 
-	config.headers['User-Agent'] = config.headers['User-Agent'] || 'Startdeliver-JS';
+	if (!window) {
+		config.headers['User-Agent'] = config.headers['User-Agent'] || 'Startdeliver-JS';
+	}
 
 	this.debug('config', config);
 
