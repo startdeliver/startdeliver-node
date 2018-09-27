@@ -117,7 +117,6 @@ Startdeliver.prototype.login = function () {
 	return new Promise((resolve, reject) => {
 
 		self.doRequest(opts).then((res) => {
-			self.settings.apiKey = res.apiKey;
 
 			return cb ? cb(null, res) : resolve(res);
 
