@@ -224,7 +224,21 @@ Startdeliver.prototype.save = function (entity, params) {
 	};
 
 	return self.doRequest(opts);
+};
 
+Startdeliver.prototype.patch = function (entity, params) {
+	const self = this;
+	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
+	const id = params.id;
+
+	const opts = {
+		cb: cb,
+		endpoint: entity + (id ? ('/' + id) : ''),
+		method: 'patch',
+		body: params
+	};
+
+	return self.doRequest(opts);
 };
 
 Startdeliver.prototype.replace = function (entity, params) {
@@ -314,7 +328,7 @@ Startdeliver.prototype.find = Startdeliver.prototype.get;
 Startdeliver.prototype.create = Startdeliver.prototype.save;
 Startdeliver.prototype.update = Startdeliver.prototype.save;
 Startdeliver.prototype.post = Startdeliver.prototype.save;
-Startdeliver.prototype.patch = Startdeliver.prototype.save;
+Startdeliver.prototype.patch = Startdeliver.prototype.patch;
 Startdeliver.prototype.put = Startdeliver.prototype.replace;
 Startdeliver.prototype.remove = Startdeliver.prototype.delete;
 
