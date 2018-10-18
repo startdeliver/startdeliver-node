@@ -107,7 +107,6 @@ Startdeliver.prototype.doRequest = function (opts) {
 
 			})
 			.catch((err) => {
-				console.log('Alltså', err);
 				this.debug('err', err);
 				if (err.response) {
 					err = { statusCode: err.response.status, data: err.response.data };
