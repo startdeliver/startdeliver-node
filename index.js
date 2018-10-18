@@ -58,7 +58,9 @@ Startdeliver.prototype.doRequest = function (opts) {
 		config.headers.Authorization = self.settings.apiKey;
 	}
 
-	if (!window) {
+	/* eslint-disable */
+	if (typeof window === undefined) {
+		/* eslint-enable */
 		config.headers['User-Agent'] = config.headers['User-Agent'] || 'Startdeliver-JS';
 	}
 
