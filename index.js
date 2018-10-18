@@ -244,6 +244,12 @@ Startdeliver.prototype.raw = function (params) {
 
 };
 
+Startdeliver.prototype.use = function (m) {
+	Object.keys(m).forEach((key) => {
+		Startdeliver.prototype[key] = m[key];
+	});
+};
+
 Startdeliver.prototype.debug = function (msg, obj) {
 
 	if (this.settings && this.settings.debug) {
