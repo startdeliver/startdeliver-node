@@ -16,15 +16,20 @@ const Startdeliver = function (settings) {
 	}
 
 	this.settings.version = this.settings.version || 'v1';
-	this.settings.apiUrl = this.settings.apiUrl || 'https://api.startdeliver.com/';
+	this.settings.apiUrl = this.settings.apiUrl || 'https://app1.startdeliver.com/';
 	this.settings.debug = this.settings.debug || false;
 	this.settings.debugShowApiKey = this.settings.debugShowApiKey || false;
+	this.settings.stripUpdatedFields = this.settings.stripUpdatedFields || true;
 
 	if (this.settings.apiUrl.slice(-1) !== '/') {
 		this.settings.apiUrl = this.settings.apiUrl + '/';
 	}
 	this.settings.apiUrl += 'api/';
 	this.settings.apiUrl += (this.settings.version + '/');
+
+	if (this.settings.appApi) {
+		this.settings.apiUrl += 'app/';
+	}
 };
 
 Startdeliver.prototype.setApiKey = function(apiKey) {
@@ -36,6 +41,15 @@ Startdeliver.prototype.setDefaultHeader = function(header, str) {
 };
 
 Startdeliver.prototype.setToken = this.setApiKey;
+
+Startdeliver.prototype.addExpireFn = function (fn) {
+	this.expireFn = fn;
+};
+
+Startdeliver.prototype.updateExpireFn = function (fn, ms) {
+	this._expireFn ? clearTimeout(this._expireFn) : '';
+	this._expireFn = setTimeout(fn, ms);
+};
 
 Startdeliver.prototype.doRequest = function (opts) {
 	const self = this;
@@ -64,18 +78,40 @@ Startdeliver.prototype.doRequest = function (opts) {
 		config.headers['User-Agent'] = config.headers['User-Agent'] || 'Startdeliver-JS';
 	}
 
+	if (config.data && this.settings.stripUpdatedFields) {
+		if (config.data.updatedAt) {
+			config.data.updatedAt = undefined;
+		}
+		if (config.data.updatedBy) {
+			config.data.updatedBy = undefined;
+		}
+	}
+
 	this.debug('config', config);
 
 	return new Promise((resolve, reject) => {
 		axios(config)
 			.then((res) => {
 				this.debug('res', res);
+
+				if (res.headers['startdeliver-expires-at']) {
+					if (this.expireFn) {
+						const now = new Date().valueOf();
+						const expiresAt = new Date(res.headers['startdeliver-expires-at']).valueOf();
+						const msLeft = expiresAt - now;
+						this.updateExpireFn(this.expireFn, msLeft - (60 * 15000));
+					}
+				}
+
 				return cb ? cb(null, res.data) : resolve(res.data);
 
 			})
 			.catch((err) => {
+				console.log('Alltså', err);
 				this.debug('err', err);
-				err = { statusCode: err.response.status, data: err.response.data };
+				if (err.response) {
+					err = { statusCode: err.response.status, data: err.response.data };
+				}
 				return cb ? cb(err) : reject(err);
 
 			});
@@ -147,27 +183,27 @@ Startdeliver.prototype.get = function (entity, params) {
 			};
 			if (params.filter.limit) {
 				params.limit = params.filter.limit;
-				delete params.filter.limit;
+				params.filter.limit = undefined;
 			}
 			if (params.filter.offset) {
 				params.offset = params.filter.offset;
-				delete params.filter.offset;
+				params.filter.offset = undefined;
 			}
 			if (params.filter.flat) {
 				params.flat = params.filter.flat;
-				delete params.filter.flat;
+				params.filter.flat = undefined;
 			}
 			if (params.filter.sort) {
 				params.sort = params.filter.sort;
-				delete params.filter.sort;
+				params.filter.sort = undefined;
 			}
 			if (params.filter.report) {
 				params.report = params.filter.report;
-				delete params.filter.report;
+				params.filter.report = undefined;
 			}
 			if (params.filter.expand) {
 				params.expand = params.filter.expand;
-				delete params.filter.expand;
+				params.filter.expand = undefined;
 			}
 		}
 		opts.endpoint += '?query=' + encodeURIComponent(JSON.stringify(params));
