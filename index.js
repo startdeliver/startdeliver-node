@@ -235,7 +235,7 @@ Startdeliver.prototype.replace = function (entity, params) {
 
 	const opts = {
 		cb: cb,
-		endpoint: entity + '/' + id,
+		endpoint: entity + '/' + (id ? id : ''),
 		method: 'put',
 		body: params
 	};
@@ -255,7 +255,7 @@ Startdeliver.prototype.delete = function (entity, id) {
 
 	const opts = {
 		cb: cb,
-		endpoint: entity + '/' + id,
+		endpoint: entity + '/' + (id ? id : ''),
 		method: 'delete'
 	};
 
