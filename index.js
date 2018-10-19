@@ -180,27 +180,27 @@ Startdeliver.prototype.get = function (entity, params) {
 			params = {
 				filter: params
 			};
-			if (params.filter.limit) {
+			if (params.filter.hasOwnProperty('limit')) {
 				params.limit = params.filter.limit;
 				params.filter.limit = undefined;
 			}
-			if (params.filter.offset) {
+			if (params.filter.hasOwnProperty('offset')) {
 				params.offset = params.filter.offset;
 				params.filter.offset = undefined;
 			}
-			if (params.filter.flat) {
+			if (params.filter.hasOwnProperty('flat')) {
 				params.flat = params.filter.flat;
 				params.filter.flat = undefined;
 			}
-			if (params.filter.sort) {
+			if (params.filter.hasOwnProperty('sort')) {
 				params.sort = params.filter.sort;
 				params.filter.sort = undefined;
 			}
-			if (params.filter.report) {
+			if (params.filter.hasOwnProperty('report')) {
 				params.report = params.filter.report;
 				params.filter.report = undefined;
 			}
-			if (params.filter.expand) {
+			if (params.filter.hasOwnProperty('expand')) {
 				params.expand = params.filter.expand;
 				params.filter.expand = undefined;
 			}
