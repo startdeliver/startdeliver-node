@@ -42,15 +42,6 @@ Startdeliver.prototype.setDefaultHeader = function(header, str) {
 
 Startdeliver.prototype.setToken = this.setApiKey;
 
-Startdeliver.prototype.addExpireFn = function (fn) {
-	this.expireFn = fn;
-};
-
-Startdeliver.prototype.updateExpireFn = function (fn, ms) {
-	this._expireFn ? clearTimeout(this._expireFn) : '';
-	this._expireFn = setTimeout(fn, ms);
-};
-
 Startdeliver.prototype.doRequest = function (opts) {
 	const self = this;
 	const cb = opts.cb;
@@ -93,15 +84,6 @@ Startdeliver.prototype.doRequest = function (opts) {
 		axios(config)
 			.then((res) => {
 				this.debug('res', res);
-
-				if (res.headers['startdeliver-expires-at']) {
-					if (this.expireFn) {
-						const now = new Date().valueOf();
-						const expiresAt = new Date(res.headers['startdeliver-expires-at']).valueOf();
-						const msLeft = expiresAt - now;
-						this.updateExpireFn(this.expireFn, msLeft - (60 * 15000));
-					}
-				}
 
 				return cb ? cb(null, res.data) : resolve(res.data);
 
@@ -176,36 +158,75 @@ Startdeliver.prototype.get = function (entity, params) {
 	};
 
 	if (params && typeof params === 'object') {
-		if (!params.filter) {
-			params = {
-				filter: params
-			};
-			if (params.filter.hasOwnProperty('limit')) {
-				params.limit = params.filter.limit;
-				params.filter.limit = undefined;
+
+		if (this.settings.appApi) {
+
+			Object.keys(params).forEach(function (key) {
+
+				if (opts.endpoint.indexOf('?') === -1) {
+					opts.endpoint += '?';
+				} else {
+					opts.endpoint += '&';
+				}
+
+				if (params[key] && typeof params[key] === 'object') {
+					if (params[key].hasOwnProperty('gt')) {
+						opts.endpoint += (key + '>=' + (params[key] + 1));
+					}
+					if (params[key].hasOwnProperty('gte')) {
+						opts.endpoint += (key + '>=' + (params[key]));
+					}
+					if (params[key].hasOwnProperty('lt')) {
+						opts.endpoint += (key + '<=' + (params[key] - 1));
+					}
+					if (params[key].hasOwnProperty('lte')) {
+						opts.endpoint += (key + 'z=' + (params[key]));
+					}
+					if (params[key].hasOwnProperty('eq')) {
+						opts.endpoint += (key + '=' + params[key]);
+					}
+					if (params[key].hasOwnProperty('ne')) {
+						opts.endpoint += (key + '!=' + params[key]);
+					}
+				} else {
+					opts.endpoint += (key + '=' + params[key]);
+				}
+
+			});
+
+		} else {
+
+			if (!params.filter) {
+				params = {
+					filter: params
+				};
+				if (params.filter.hasOwnProperty('limit')) {
+					params.limit = params.filter.limit;
+					params.filter.limit = undefined;
+				}
+				if (params.filter.hasOwnProperty('offset')) {
+					params.offset = params.filter.offset;
+					params.filter.offset = undefined;
+				}
+				if (params.filter.hasOwnProperty('flat')) {
+					params.flat = params.filter.flat;
+					params.filter.flat = undefined;
+				}
+				if (params.filter.hasOwnProperty('sort')) {
+					params.sort = params.filter.sort;
+					params.filter.sort = undefined;
+				}
+				if (params.filter.hasOwnProperty('report')) {
+					params.report = params.filter.report;
+					params.filter.report = undefined;
+				}
+				if (params.filter.hasOwnProperty('expand')) {
+					params.expand = params.filter.expand;
+					params.filter.expand = undefined;
+				}
 			}
-			if (params.filter.hasOwnProperty('offset')) {
-				params.offset = params.filter.offset;
-				params.filter.offset = undefined;
-			}
-			if (params.filter.hasOwnProperty('flat')) {
-				params.flat = params.filter.flat;
-				params.filter.flat = undefined;
-			}
-			if (params.filter.hasOwnProperty('sort')) {
-				params.sort = params.filter.sort;
-				params.filter.sort = undefined;
-			}
-			if (params.filter.hasOwnProperty('report')) {
-				params.report = params.filter.report;
-				params.filter.report = undefined;
-			}
-			if (params.filter.hasOwnProperty('expand')) {
-				params.expand = params.filter.expand;
-				params.filter.expand = undefined;
-			}
+			opts.endpoint += '?query=' + encodeURIComponent(JSON.stringify(params));
 		}
-		opts.endpoint += '?query=' + encodeURIComponent(JSON.stringify(params));
 	}
 
 	return self.doRequest(opts);
