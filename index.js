@@ -232,6 +232,29 @@ Startdeliver.prototype.get = function (entity, params) {
 	return self.doRequest(opts);
 };
 
+Startdeliver.prototype.findOne = function (entity, params) {
+	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
+	const id = typeof params === 'number' ? params : null;
+
+	if (id) {
+		return this.get(entity, params);
+	}
+	params.limit = 1;
+
+	return new Promise((resolve, reject) => {
+		this.get(entity, params, function (err, res) {
+			if (err) {
+				return cb ? cb(err) : reject(err);
+			}
+			if (!res.result[0]) {
+				return cb ? cb(null, null) : resolve(null);
+			}
+			return cb ? cb(null, res.result[0]) : resolve(res.result[0]);
+		});
+	});
+
+};
+
 Startdeliver.prototype.save = function (entity, params) {
 	const self = this;
 	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
