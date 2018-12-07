@@ -97,7 +97,14 @@ Startdeliver.prototype.doRequest = function (opts) {
 				this.debug('err', err);
 				if (err.response) {
 					err = { statusCode: err.response.status, data: err.response.data };
+
+					if (err.statusCode === 401) {
+						if (self.onUnauthorized && typeof self.onUnauthorized === 'function') {
+							self.onUnauthorized(opts.endpoint);
+						}
+					}
 				}
+
 				return cb ? cb(err) : reject(err);
 
 			});
