@@ -1,6 +1,11 @@
 const axios = require('axios');
 
 const Startdeliver = function (settings) {
+
+	if (settings && typeof settings === 'object') {
+		settings = JSON.parse(JSON.stringify(settings));
+	}
+
 	this.settings = settings || {};
 
 	if (typeof this.settings === 'string') {
