@@ -21,7 +21,7 @@ const Startdeliver = function (settings) {
 	}
 
 	this.settings.version = this.settings.version || 'v1';
-	this.settings.apiUrl = this.settings.apiUrl || 'https://app1.startdeliver.com/';
+	this.settings.apiUrl = this.settings.apiUrl || 'https://app.startdeliver.com/';
 	this.settings.debug = this.settings.debug || false;
 	this.settings.debugShowApiKey = this.settings.debugShowApiKey || false;
 	this.settings.stripUpdatedFields = this.settings.stripUpdatedFields || true;
@@ -43,6 +43,10 @@ Startdeliver.prototype.setApiKey = function(apiKey) {
 
 Startdeliver.prototype.setDefaultHeader = function(header, str) {
 	this.settings.headers[header] = str;
+};
+
+Startdeliver.prototype.removeDefaultHeader = function(header) {
+	delete this.settings.headers[header];
 };
 
 Startdeliver.prototype.setToken = this.setApiKey;
