@@ -196,7 +196,7 @@ Startdeliver.prototype.get = function (entity, params) {
 						opts.endpoint += (key + '<=' + (params[key] - 1));
 					}
 					if (params[key].hasOwnProperty('lte')) {
-						opts.endpoint += (key + 'z=' + (params[key]));
+						opts.endpoint += (key + '<=' + (params[key]));
 					}
 					if (params[key].hasOwnProperty('eq')) {
 						opts.endpoint += (key + '=' + params[key]);
@@ -267,6 +267,46 @@ Startdeliver.prototype.findOne = function (entity, params) {
 			}
 			return cb ? cb(null, res.result[0]) : resolve(res.result[0]);
 		});
+	});
+
+};
+
+Startdeliver.prototype.findAll = function (entity, params) {
+	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
+	const self = this;
+
+	params = params || {};
+
+	let result = [];
+
+	return new Promise((resolve, reject) => {
+
+		if (entity === 'usage') {
+			const err = 'findAll not available for entity usage';
+			return cb ? cb(err) : reject(err);
+		}
+
+		function getMatches(offset) {
+			params.limit = 500;
+			params.offset = offset;
+
+			self.get(entity, params, function (err, res) {
+				if (err) {
+					return cb ? cb(err) : reject(err);
+				}
+
+				result = result.concat(res.result);
+
+				if (res.result.length === 500) {
+					return getMatches(offset + 500);
+				}
+
+				return cb ? cb(null, result) : resolve(result);
+			});
+
+		}
+		getMatches(0);
+
 	});
 
 };
