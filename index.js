@@ -432,7 +432,7 @@ Startdeliver.prototype.debug = function (msg, obj) {
 					authHeader = objCopy.sent.headers;
 				}
 				if (authHeader.Authorization) {
-					authHeader.Authorization = authHeader.Authorization.substr(0,5) + ' ******* masking-rest-of-the-api-key *******';
+					authHeader.Authorization = authHeader.Authorization.substr(0,9) + ' ******* masking-rest-of-the-api-key *******';
 				}
 			}
 		}
