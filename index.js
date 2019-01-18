@@ -23,6 +23,7 @@ const Startdeliver = function (settings) {
 	this.settings.version = this.settings.version || 'v1';
 	this.settings.apiUrl = this.settings.apiUrl || 'https://app.startdeliver.com/';
 	this.settings.debug = this.settings.debug || false;
+	this.settings.debugOnlyError = this.settings.debugOnlyError || false;
 	this.settings.debugShowApiKey = this.settings.debugShowApiKey || false;
 	this.settings.stripUpdatedFields = this.settings.stripUpdatedFields || true;
 
@@ -92,13 +93,13 @@ Startdeliver.prototype.doRequest = function (opts) {
 	return new Promise((resolve, reject) => {
 		axios(config)
 			.then((res) => {
-				this.debug('res', res);
+				this.debug('res', (res ? { data: res.data, status: res.status, headers: res.headers } : null));
 
 				return cb ? cb(null, res.data) : resolve(res.data);
 
 			})
 			.catch((err) => {
-				this.debug('err', err);
+				this.debug('err', (err && err.response ? { data: err.response.data, status: err.response.status, headers: err.response.headers, sent: err.response.config } : null));
 				if (err.response) {
 					err = { statusCode: err.response.status, data: err.response.data };
 
@@ -251,6 +252,8 @@ Startdeliver.prototype.get = function (entity, params) {
 Startdeliver.prototype.findOne = function (entity, params) {
 	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
 	const id = typeof params === 'number' ? params : null;
+
+	params = params || {};
 
 	if (id) {
 		return this.get(entity, params);
@@ -405,11 +408,32 @@ Startdeliver.prototype.debug = function (msg, obj) {
 
 	if (this.settings && this.settings.debug) {
 
-		let objCopy = JSON.parse(JSON.stringify(obj));
+		if (this.settings.debugOnlyError) {
+			if (msg !== 'err') {
+				return;
+			}
+		}
 
-		if (!this.settings.debugShowApiKey) {
-			if (objCopy && typeof objCopy === 'object' && objCopy.headers && objCopy.headers.Authorization) {
-				objCopy.headers.Authorization = objCopy.headers.Authorization.substr(0,5) + ' ******* masking-rest-of-the-api-key *******';
+		let objCopy;
+
+		if (obj) {
+			objCopy = JSON.parse(JSON.stringify(obj));
+			if (objCopy.url) {
+				objCopy.urlDecoded = decodeURIComponent(objCopy.url);
+			}
+
+			if (!this.settings.debugShowApiKey) {
+				let authHeader;
+
+				if (objCopy && typeof objCopy === 'object' && objCopy.headers) {
+					authHeader = objCopy.headers;
+				}
+				if (objCopy && typeof objCopy === 'object' && objCopy.sent && objCopy.sent.headers) {
+					authHeader = objCopy.sent.headers;
+				}
+				if (authHeader.Authorization) {
+					authHeader.Authorization = authHeader.Authorization.substr(0,5) + ' ******* masking-rest-of-the-api-key *******';
+				}
 			}
 		}
 
