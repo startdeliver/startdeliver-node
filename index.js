@@ -241,6 +241,10 @@ Startdeliver.prototype.get = function (entity, params) {
 					params.expand = params.filter.expand;
 					params.filter.expand = undefined;
 				}
+				if (params.filter.hasOwnProperty('history')) {
+					params.history = params.filter.history;
+					params.filter.history = undefined;
+				}
 			}
 			opts.endpoint += '?query=' + encodeURIComponent(JSON.stringify(params));
 		}
@@ -309,6 +313,81 @@ Startdeliver.prototype.findAll = function (entity, params) {
 
 		}
 		getMatches(0);
+
+	});
+
+};
+
+
+
+Startdeliver.prototype.findWithHistory = function (entity, params, history) {
+	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
+	const self = this;
+
+	function getHistory (tmpObj, history, historyParams, i, historyCb) {
+
+		let currentHistory = history[i];
+
+		historyParams.history = currentHistory === 'now' ? null : currentHistory;
+
+		self.find(entity, historyParams, function (err, res) {
+			if (err) {
+				return historyCb(err);
+			}
+			if (i === history.length) {
+				return historyCb();
+			}
+
+			for (let i = 0; i < res.result.length; i++) {
+				tmpObj[res.result[i].id].$history[currentHistory] = res.result[i];
+			}
+
+			return getHistory(tmpObj, history, historyParams, i + 1, historyCb);
+
+		});
+	}
+
+
+	if (!Array.isArray(history)) {
+		history = [history];
+	}
+
+	return new Promise((resolve, reject) => {
+
+		if (entity !== 'customer') {
+			const err = 'findWithHistory only available for entity customer';
+			return cb ? cb(err) : reject(err);
+		}
+
+		self.find(entity, params, async (err, res) => {
+			if (err) {
+				return cb ? cb(err) : reject(err);
+			}
+
+			const historyParams = {
+				filter: {
+					id: []
+				}
+			};
+
+			const tmpObj = {};
+
+			for (let i = 0; i < res.result.length; i++) {
+				historyParams.filter.id.push(res.result[i].id);
+				tmpObj[res.result[i].id] = res.result[i];
+				res.result[i].$history = {};
+			}
+
+			historyParams.limit = res.result.length;
+
+			getHistory(tmpObj, history, historyParams, 0, function (err) {
+				if (err) {
+					return cb ? cb(err) : reject(err);
+				}
+				return cb ? cb(null, res) : resolve(res);
+			});
+
+		});
 
 	});
 
