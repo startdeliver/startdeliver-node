@@ -348,18 +348,23 @@ Startdeliver.prototype.findWithHistory = function (entity, params, history) {
 	}
 
 
-	if (!Array.isArray(history)) {
-		history = [history];
-	}
-
 	return new Promise((resolve, reject) => {
+
+		if (!history) {
+			const err = 'no history item provided';
+			return cb ? cb(err) : reject(err);
+		}
+
+		if (!Array.isArray(history)) {
+			history = [history];
+		}
 
 		if (entity !== 'customer') {
 			const err = 'findWithHistory only available for entity customer';
 			return cb ? cb(err) : reject(err);
 		}
 
-		self.find(entity, params, async (err, res) => {
+		self.find(entity, params, (err, res) => {
 			if (err) {
 				return cb ? cb(err) : reject(err);
 			}
