@@ -294,10 +294,11 @@ Startdeliver.prototype.findAll = function (entity, params) {
 		}
 
 		function getMatches(offset) {
-			params.limit = 500;
-			params.offset = offset;
+			const paramsCopy = JSON.parse(JSON.stringify(params));
+			paramsCopy.limit = 500;
+			paramsCopy.offset = offset;
 
-			self.get(entity, params, function (err, res) {
+			self.get(entity, paramsCopy, function (err, res) {
 				if (err) {
 					return cb ? cb(err) : reject(err);
 				}
