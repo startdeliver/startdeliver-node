@@ -74,7 +74,7 @@ Startdeliver.prototype.doRequest = function (opts) {
 	}
 
 	/* eslint-disable */
-	if (typeof window === undefined) {
+	if (typeof window === 'undefined') {
 		/* eslint-enable */
 		config.headers['User-Agent'] = config.headers['User-Agent'] || 'Startdeliver-JS';
 	}
@@ -88,18 +88,27 @@ Startdeliver.prototype.doRequest = function (opts) {
 		}
 	}
 
+	if (opts.pipe) {
+		config.responseType = 'stream';
+	}
+
 	this.debug('config', config);
 
 	return new Promise((resolve, reject) => {
 		axios(config)
 			.then((res) => {
+				if (opts.pipe && typeof window === 'undefined') {
+					this.debug('res pipe', (res ? { path: opts.pipe, status: res.status, headers: res.headers } : null));
+					return res.data.pipe(require('fs').createWriteStream(opts.pipe));
+				}
+
 				this.debug('res', (res ? { data: res.data, status: res.status, headers: res.headers } : null));
 
 				return cb ? cb(null, res.data) : resolve(res.data);
 
 			})
 			.catch((err) => {
-				this.debug('err', (err && err.response ? { data: err.response.data, status: err.response.status, headers: err.response.headers, sent: err.response.config } : null));
+				this.debug('err', (err && err.response ? { data: opts.pipe ? null : err.response.data, status: err.response.status, headers: err.response.headers, sent: err.response.config } : null));
 				if (err.response) {
 					err = { statusCode: err.response.status, data: err.response.data };
 
@@ -482,6 +491,48 @@ Startdeliver.prototype.raw = function (params) {
 	return self.doRequest(opts);
 
 };
+
+
+Startdeliver.prototype.download = function (fileId, path) {
+	const self = this;
+	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
+
+	const opts = {
+		cb: cb,
+		endpoint: 'download' + '/' + fileId,
+		method: 'get'
+	};
+
+	return new Promise((resolve, reject) => {
+
+		self.findOne('file', fileId).then(function (file) {
+
+			if (!file) {
+				return (cb ? cb('No such file') : reject('No such file'));
+			}
+
+			if (path) {
+				if (path[0] === '/' || path.indexOf('./') === 0) {
+					opts.pipe = path;
+				} else {
+					opts.pipe = ('./' + path);
+				}
+			} else {
+				opts.pipe = ('./' + file.name);
+			}
+
+			return self.doRequest(opts);
+
+		}).catch(function (err) {
+
+			cb ? cb(err) : reject(err);
+		});
+
+	});
+
+};
+
+
 
 Startdeliver.prototype.use = function (m) {
 	Object.keys(m).forEach((key) => {
