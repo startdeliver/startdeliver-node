@@ -95,11 +95,13 @@ Startdeliver.prototype.doRequest = function (opts) {
 	this.debug('config', config);
 
 	return new Promise((resolve, reject) => {
+
 		axios(config)
 			.then((res) => {
 				if (opts.pipe && typeof window === 'undefined') {
 					this.debug('res pipe', (res ? { path: opts.pipe, status: res.status, headers: res.headers } : null));
-					return res.data.pipe(require('fs').createWriteStream(opts.pipe));
+					res.data.pipe(require('fs').createWriteStream(opts.pipe));
+					return cb ? cb() : resolve();
 				}
 
 				this.debug('res', (res ? { data: res.data, status: res.status, headers: res.headers } : null));
@@ -523,8 +525,9 @@ Startdeliver.prototype.download = function (fileId, path) {
 
 			return self.doRequest(opts);
 
+		}).then(function (res) {
+			cb ? cb(null, res) : resolve(res);
 		}).catch(function (err) {
-
 			cb ? cb(err) : reject(err);
 		});
 
