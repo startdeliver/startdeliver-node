@@ -136,6 +136,7 @@ Startdeliver.prototype.login = function () {
 	let username;
 	let password;
 	let remember = false;
+	let setCookie = false;
 
 	if (!arguments[0]) {
 		throw new Error('Invalid arguments for login method');
@@ -145,6 +146,7 @@ Startdeliver.prototype.login = function () {
 		username = arguments[0].username || arguments[0].user || arguments[0].email || arguments[0].u;
 		password = arguments[0].password || arguments[0].pass || arguments[0].p;
 		remember = arguments[0].remember || arguments[0].r || false;
+		setCookie = arguments[0].setCookie;
 	} else {
 		username = arguments[0];
 		password = arguments[1];
@@ -157,7 +159,8 @@ Startdeliver.prototype.login = function () {
 		body: {
 			email: username,
 			password: password,
-			remember: remember ? true : false
+			remember: remember ? true : false,
+			setCookie: setCookie
 		}
 	};
 
