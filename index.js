@@ -498,7 +498,7 @@ Startdeliver.prototype.raw = function (params) {
 };
 
 
-Startdeliver.prototype.download = function (fileId, path) {
+Startdeliver.prototype.download = function (fileId, params) {
 	const self = this;
 	const cb = typeof arguments[arguments.length - 1] === 'function' ? arguments[arguments.length - 1] : null;
 
@@ -508,6 +508,13 @@ Startdeliver.prototype.download = function (fileId, path) {
 		method: 'get'
 	};
 
+	if (typeof params === 'string') {
+		params = {
+			path: params
+		};
+	}
+	params = params || {};
+
 	return new Promise((resolve, reject) => {
 
 		self.findOne('file', fileId).then(function (file) {
@@ -516,16 +523,21 @@ Startdeliver.prototype.download = function (fileId, path) {
 				return (cb ? cb('No such file') : reject('No such file'));
 			}
 
-			if (path) {
-				if (path[0] === '/' || path.indexOf('./') === 0) {
-					opts.pipe = path;
+			if (params.path) {
+				if (params.path[0] === '/' || params.path.indexOf('./') === 0) {
+					opts.pipe = params.path;
 				} else {
-					opts.pipe = ('./' + path);
+					opts.pipe = ('./' + params.path);
 				}
 			} else {
 				opts.pipe = ('./' + file.name);
 			}
 
+			if (params.byteEnd) {
+				opts.endpoint += ('?byteStart=' + params.byteStart);
+				opts.endpoint += ('&byteEnd=' + params.byteEnd);
+			}
+			console.log(opts);
 			return self.doRequest(opts);
 
 		}).then(function (res) {
