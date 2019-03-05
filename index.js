@@ -30,7 +30,9 @@ const Startdeliver = function (settings) {
 	if (this.settings.apiUrl.slice(-1) !== '/') {
 		this.settings.apiUrl = this.settings.apiUrl + '/';
 	}
+
 	this.settings.apiUrl += 'api/';
+	this.settings.apiBaseUrl = this.settings.apiUrl;
 	this.settings.apiUrl += (this.settings.version + '/');
 
 	if (this.settings.appApi) {
@@ -68,6 +70,10 @@ Startdeliver.prototype.doRequest = function (opts) {
 		withCredentials: true,
 		headers: JSON.parse(JSON.stringify(this.settings.headers)),
 	};
+
+	if (opts.endpoint.indexOf('service/') === 0 || opts.endpoint.indexOf('app/') === 0) {
+		config.url = this.settings.apiBaseUrl + opts.endpoint;
+	}
 
 	if (self.settings.apiKey) {
 		config.headers.Authorization = self.settings.apiKey;
@@ -167,6 +173,10 @@ Startdeliver.prototype.login = function () {
 	return new Promise((resolve, reject) => {
 
 		self.doRequest(opts).then((res) => {
+
+			if (!setCookie) {
+				self.setApiKey(res.apiKey);
+			}
 
 			return cb ? cb(null, res) : resolve(res);
 
@@ -272,6 +282,7 @@ Startdeliver.prototype.findOne = function (entity, params) {
 	const id = typeof params === 'number' ? params : null;
 
 	params = params || {};
+	params = JSON.parse(JSON.stringify(params));
 
 	if (id) {
 		return this.get(entity, params);
