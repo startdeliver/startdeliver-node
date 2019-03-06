@@ -44,6 +44,10 @@ Startdeliver.prototype.setApiKey = function(apiKey) {
 	this.settings.apiKey = apiKey;
 };
 
+Startdeliver.prototype.setConfig = function(key, value) {
+	this.settings[key] = value;
+};
+
 Startdeliver.prototype.setDefaultHeader = function(header, str) {
 	this.settings.headers[header] = str;
 };
@@ -107,7 +111,10 @@ Startdeliver.prototype.doRequest = function (opts) {
 				if (opts.pipe && typeof window === 'undefined') {
 					this.debug('res pipe', (res ? { path: opts.pipe, status: res.status, headers: res.headers } : null));
 					res.data.pipe(require('fs').createWriteStream(opts.pipe));
-					return cb ? cb() : resolve();
+					res.data.on('end', () => {
+						cb ? cb() : resolve();
+					});
+					return;
 				}
 
 				this.debug('res', (res ? { data: res.data, status: res.status, headers: res.headers } : null));
