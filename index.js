@@ -35,6 +35,10 @@ const Startdeliver = function (settings) {
 	this.settings.apiBaseUrl = this.settings.apiUrl;
 	this.settings.apiUrl += (this.settings.version + '/');
 
+	if (this.settings.apiKey && this.settings.apiKey.indexOf('appapi') === 0) {
+		this.settings.appApi = true;
+	}
+
 	if (this.settings.appApi) {
 		this.settings.apiUrl += 'app/';
 	}
@@ -219,22 +223,22 @@ Startdeliver.prototype.get = function (entity, params) {
 
 				if (params[key] && typeof params[key] === 'object') {
 					if (params[key].hasOwnProperty('gt')) {
-						opts.endpoint += (key + '>=' + (params[key] + 1));
+						opts.endpoint += (key + '>=' + (params[key].gt + 1));
 					}
 					if (params[key].hasOwnProperty('gte')) {
-						opts.endpoint += (key + '>=' + (params[key]));
+						opts.endpoint += (key + '>=' + (params[key].gte));
 					}
 					if (params[key].hasOwnProperty('lt')) {
-						opts.endpoint += (key + '<=' + (params[key] - 1));
+						opts.endpoint += (key + '<=' + (params[key].lt - 1));
 					}
 					if (params[key].hasOwnProperty('lte')) {
-						opts.endpoint += (key + '<=' + (params[key]));
+						opts.endpoint += (key + '<=' + (params[key].lte));
 					}
 					if (params[key].hasOwnProperty('eq')) {
-						opts.endpoint += (key + '=' + params[key]);
+						opts.endpoint += (key + '=' + params[key].eq);
 					}
 					if (params[key].hasOwnProperty('ne')) {
-						opts.endpoint += (key + '!=' + params[key]);
+						opts.endpoint += (key + '!=' + params[key].ne);
 					}
 				} else {
 					opts.endpoint += (key + '=' + params[key]);
