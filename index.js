@@ -79,6 +79,12 @@ Startdeliver.prototype.doRequest = function (opts) {
 		headers: JSON.parse(JSON.stringify(this.settings.headers)),
 	};
 
+	if (opts.headers) {
+		Object.keys(opts.headers).forEach((header) => {
+			config.headers[header] = opts.headers[header];
+		});
+	}
+
 	if (opts.endpoint.indexOf('service/') === 0 || opts.endpoint.indexOf('app/') === 0) {
 		config.url = this.settings.apiBaseUrl + opts.endpoint;
 	}
@@ -281,7 +287,16 @@ Startdeliver.prototype.get = function (entity, params) {
 					params.filter.history = undefined;
 				}
 			}
+
 			opts.endpoint += '?query=' + encodeURIComponent(JSON.stringify(params));
+
+			if (opts.endpoint.length > 7500) {
+				opts.headers = { 'X-HTTP-Method-Override': 'GET' };
+				opts.method = 'post';
+				opts.body = { query: params };
+				opts.endpoint = opts.endpoint.split('?query=')[0];
+			}
+
 		}
 	}
 
@@ -512,6 +527,7 @@ Startdeliver.prototype.raw = function (params) {
 		cb: cb,
 		endpoint: params.endpoint,
 		method: params.method || 'get',
+		headers: params.headers,
 		body: params.body
 	};
 
